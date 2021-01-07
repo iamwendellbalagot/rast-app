@@ -1,4 +1,4 @@
-const createElement = (type, props, ...children) => {
+const DOMnode = (type, props, ...children) => {
   return {
   type,
   props: {
@@ -242,5 +242,7 @@ const reconcileChildren = (wipFiber, elements) => {
   }
 };
 
- export  { createElement, renderDOM, initializeValue };
-/** @jsx createElement */
+const Rast = { DOMnode, renderDOM, initializeValue }
+export  { DOMnode, renderDOM, initializeValue };
+export default Rast
+/** @jsx DOMnode */

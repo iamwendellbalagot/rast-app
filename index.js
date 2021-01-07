@@ -1,5 +1,5 @@
-import {renderDOM, createElement} from './Raku'
-/** @jsx createElement */
+import Rast from './rast'
+/** @jsx Rast.DOMnode */
 import Welcome from './src/app';
 const App = () => {
     return (
@@ -11,4 +11,4 @@ const App = () => {
 
 const element = <App />;
 const container = document.getElementById("root");
-renderDOM(element, container);
+Rast.renderDOM(element, container);

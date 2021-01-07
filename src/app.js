@@ -1,5 +1,5 @@
-import {initializeValue, createElement} from '../Raku';
-/** @jsx createElement */
+import {initializeValue, DOMnode} from '../rast';
+/** @jsx DOMnode */
 
 import './styles.scss'
 
