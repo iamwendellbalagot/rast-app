@@ -13,19 +13,29 @@ JavaScript front-end library that supports concurrent mode
 ``` js
 npm install -g rastjs-app
 ```
-* **Note**: *rastjs-app* When you generate a rasp-app, rastjs core library is already intalled it also includes webpack and babel (Like create-react-app).<br/>
+* **Note**: When you generate a *rasp-app*, rastjs core library is already installed. it also includes webpack and babel (Like create-react-app).<br/>
 
 Here is the link to core library repository: https://github.com/iamwendellbalagot/rastjs <br/>
 
 
-  * To create RastJS app, on your terminal use: 
+  * To create a RastJS app, on your terminal use: 
  ``` js
  rast-app your-app-name
+ ```
+   * To start the development server: 
+ ``` js
+ npm start
+ ```
+ 
+   * Bundling rasp-app:
+   * Note: css and sass loaders are already installed, you can also use custom loaders by modifying the webpack.config.js
+ ``` js
+ npm run build
  ```
  
 ### Usage
 ``` js
-import Rast, { initializeState, DOMnode } from "rastjs";
+import Rast, { initializeValue, DOMnode } from "rastjs";
 /** @jsx DOMnode */
 
 const App = () => {
@@ -40,15 +50,15 @@ export default App;
 
 ```
   * **Note**: you need to add *//** @jsx DOMnode*/ to every .js files that uses JSX to transpile it (see the example above).
-### initializeState Hook
+### initializeValue Hook
 Like react, you can also declare a state in your application using RastJS.
 
 ``` js
 //State Implementation
-import {DOMnode, initializeState} from 'rastjs';
+import {DOMnode, initializeValue} from 'rastjs';
 /** @jsx DOMnode */
 const App = () => {
-  const myState = initializeState('value'); // Initialize a state
+  const myState = initializeValue('value'); // Initialize a state
   
   const handleState = () => {
     //Change the state value
@@ -64,15 +74,15 @@ export default App;
 
 ### initializeEffect Hook
 ``` js
-import {DOMnode, initializeState, initializeEffect} from 'rastjs';
+import {DOMnode, initializeValue, initializeEffect} from 'rastjs';
 /** @jsx DOMnode */ 
 
 const App = () => {
-  const myState = initializeState('value'); // Initialize a state
+  const myState = initializeValue('value'); // Initialize a state
   
   //Initialize an effect that runs whenever the **myState** value changes.
   initializeEffect([myState.value], () => {
-    console.log(`myState value UPDATED to &{myState.value}`)
+    console.log(`myState value UPDATED to ${myState.value}`)
   });
   
   const handleState = () => {
@@ -86,5 +96,49 @@ const App = () => {
 }
 export default App;
 ```
+### CSS & SCSS usage
+CSS & SASS loaders are already installed and configured. You can modify the webpack.config.js to add custom loaders.<br/>
+ * There are two ways to import CSS and SCSS files.
+``` js
+//import the css or scss file
+import './styles.css'
+
+...
+// Assign a class on a element.
+<div className='app'>
+  <p>Hello, World</p>
+</div>
+```
+
+``` js
+//import the css or scss file
+import styles from './styles.css'
+
+...
+// Assign a class on a element.
+<div className={styles.app}>
+  <p>Hello, World</p>
+</div>
+```
+### Inline Styling
+Use camel-casing, **do not use (background-color)** when declaring a style, rast will complain.
+``` js
+<div style={{backgroundColor: 'steelblue'}}>
+  <p>Hello, World</p>
+</div>
+```
+
+### Importing images
+use: 
+``` js
+//Assuming that the image is on the assets folder
+import yourImage from '../assets/your-image.png';
+<img src={yourImage} />
+
+//DO NOT USE THIS:
+<img src='../assets/your-image.png' />
+//If you use this kind of syntax, webpack will not include the image when you bundle the app.
+```
+
 ## License
 This repo is under the MIT license.
