@@ -1,12 +1,16 @@
-import {initializeValue, DOMnode} from '../rast';
+import {initializeValue, DOMnode, initializeEffect} from '../rast';
 /** @jsx DOMnode */
 
-import './styles.scss'
+import styles from './styles.module.scss'
 
 
 function App() {
     const input = initializeValue('');
     const logs = initializeValue(['wendel', 'jim', 'als']);
+
+    initializeEffect([logs.value], () => {
+        console.log('UPDATING: ',logs.value)
+    })
 
     const handleInput = (e) => {
         e.preventDefault();
@@ -21,8 +25,8 @@ function App() {
 
 
     return (
-      <div className='app'>
-        <h1>Raku</h1>
+      <div className={styles.app}>
+        <h1>Rast</h1>
         <form  eventSubmit={handleInput}>
             <input 
                 placeholder='Enter a text..'
@@ -32,7 +36,7 @@ function App() {
             <button type='submit'>Add</button>
         </form>
         {logs.value.map((a,idx) => (
-            <p style={{color: 'black'}} eventClick={() => handleDelete(idx)}>{a}</p>
+            <p className={styles.logs} eventClick={() => handleDelete(idx)}>{a}</p>
         ))}
       </div>
     );

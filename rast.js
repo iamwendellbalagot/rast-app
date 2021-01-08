@@ -1,3 +1,15 @@
+var nextWorkLoad = null;
+var rootRef = null;
+var wipRoot = null;
+var deletes = null;
+var wipFiber = null;
+var hookIndex = null;
+var effectTypes = {
+  init: 'initialize',
+  cancel: 'cancel'
+};
+
+//create virtual dom nodes
 const DOMnode = (type, props, ...children) => {
   return {
   type,
@@ -12,6 +24,20 @@ const DOMnode = (type, props, ...children) => {
   }
 }};
 
+//assign the root element as nextworkload
+const renderDOM = (element, container) => {
+  wipRoot = {
+    dom: container,
+    props: {
+      children: [element]
+    },
+    alternate: rootRef
+  };
+  deletes = [];
+  nextWorkLoad = wipRoot;
+};
+
+//create dom nodes
 const createDOM = (fiber) => {
   const node =
     fiber.type === "plainText"
@@ -26,8 +52,9 @@ const isEvent = (key) => key.startsWith("event");
 const isProp = (key) => key !== "children" && !isEvent(key);
 const destroyProps = (prev, next) => (key) => !(key in next);
 const newProps = (prev, next) => (key) => prev[key] !== next[key];
+// Update the dom; process the nodes and create fibers for reconciliation
 const updateDOM = (dom, prevProps, nextProps) => {
-  //remove lisners
+  //remove listeners
   Object.keys(prevProps)
     .filter(isEvent)
     .filter((key) => !(key in nextProps) || newProps(prevProps, nextProps)(key))
@@ -42,18 +69,18 @@ const updateDOM = (dom, prevProps, nextProps) => {
     .forEach((prop) => {
       dom[prop] = "";
     });
-  //updateProps
+  //updateProps (styles, clasName, etc..)
   Object.keys(nextProps)
     .filter(isProp)
     .filter(newProps(prevProps, nextProps))
     .forEach((prop) => {
-      if (prop === 'style') { // update style
+      if (prop === 'style') { // update if prop style
         transformDomStyle(dom, nextProps.style)
-      } else if (prop === 'className') { // update className
+      } else if (prop === 'className') { // update if prop className
         prevProps.className && dom.classList.remove(...prevProps.className.split(/\s+/))
         dom.classList.add(...nextProps.className.split(/\s+/))
       } else {
-        dom[prop] = nextProps[prop]
+        dom[prop] = nextProps[prop] //append props if not default html element prop
       }
     });
   //addevent
@@ -65,7 +92,7 @@ const updateDOM = (dom, prevProps, nextProps) => {
       dom.addEventListener(eventType, nextProps[ev]);
     });
 };
-
+// Transform styles
 const reg = /[A-Z]/g
 function transformDomStyle(dom, style) {
   dom.style = Object.keys(style)
@@ -81,6 +108,17 @@ function transformDomStyle(dom, style) {
     }, '')
 }
 
+//runeffects
+const activateEffects = (fiber, type) => {
+  (fiber.hooks && type===effectTypes.cancel) && fiber.hooks.filter(hook => hook.tag === 'effect' && hook.cancelCallback)
+    .forEach(effect => effect.cancelCallback());
+  (fiber.hooks && type===effectTypes.init) && fiber.hooks.filter(hook => hook.tag === 'effect' && hook.callback)
+    .forEach(effect => {
+      effect.cancelCallback = effect.callback();
+    })
+}
+
+//commit vdom nodes to the dom
 const commitRoot = () => {
   deletes.forEach(commitWork);
   commitWork(wipRoot.child);
@@ -95,9 +133,20 @@ const commitWork = (fiber) => {
     domParentFiber = domParentFiber.parent;
   }
   const domParent = domParentFiber.dom;
-  (fiber.effectTag === "CREATE" && fiber.dom != null) && domParent.appendChild(fiber.dom);
-  (fiber.effectTag === "UPDATE" && fiber.dom != null) && updateDOM(fiber.dom, fiber.alternate.props, fiber.props);
-  if(fiber.effectTag === "DESTROY") {commitDelete(fiber, domParent); return};
+  (fiber.effectTag === "CREATE") && (
+    (fiber.dom != null) && domParent.appendChild(fiber.dom),
+    activateEffects(fiber, effectTypes.init)
+  );
+  (fiber.effectTag === "UPDATE")&& (
+    activateEffects(fiber, effectTypes.cancel),
+    (fiber.dom != null) && updateDOM(fiber.dom, fiber.alternate.props, fiber.props),
+    activateEffects(fiber, effectTypes.init)
+  );
+  if(fiber.effectTag === "DESTROY") {
+    activateEffects(fiber, effectTypes.cancel);
+    commitDelete(fiber, domParent); 
+    return;
+  };
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 };
@@ -107,22 +156,7 @@ const commitDelete = (fiber, domParent) => {
   !fiber.dom && commitDelete(fiber.child, domParent);
 };
 
-const renderDOM = (element, container) => {
-  wipRoot = {
-    dom: container,
-    props: {
-      children: [element]
-    },
-    alternate: rootRef
-  };
-  deletes = [];
-  nextWorkLoad = wipRoot;
-};
-
-let nextWorkLoad = null;
-let rootRef = null;
-let wipRoot = null;
-let deletes = null;
+// Concurrent process
 const workLoadLoop = (deadline) => {
   let yieldStatus = false;
   while (nextWorkLoad && !yieldStatus) {
@@ -134,7 +168,7 @@ const workLoadLoop = (deadline) => {
 };
 
 requestIdleCallback(workLoadLoop);
-
+//Process the assigned workload
 const performWorkLoad = (fiber) => {
   const isFuncComponent = fiber.type instanceof Function;
   (isFuncComponent) && updateFuncComponent(fiber);
@@ -146,18 +180,16 @@ const performWorkLoad = (fiber) => {
     nextFiber = nextFiber.parent;
   }
 };
-
-let wipFiber = null;
-let hookIndex = null;
-
+// if functional component, call the function and process the return values
 const updateFuncComponent = (fiber) => {
   wipFiber = fiber;
   hookIndex = 0;
   wipFiber.hooks = [];
   const children = [fiber.type(fiber.props)];
-  reconcileChildren(fiber, children);
+  diff(fiber, children);
 };
 
+//initialize state
 const initializeValue = (initialState) => {
   const oldHook =
     wipFiber.alternate &&
@@ -167,12 +199,12 @@ const initializeValue = (initialState) => {
     state: oldHook ? oldHook.state : initialState,
     queue: []
   };
-
+  //process actions
   const actions = oldHook ? oldHook.queue : [];
   actions.forEach((action) => {
     hook.state = action;
   });
-
+  //return function to modify state
   const setState = (action) => {
     hook.queue.push(action);
     wipRoot = {
@@ -192,14 +224,33 @@ const initializeValue = (initialState) => {
   };
 };
 
+const initializeEffect = (accumulator, callback) => {
+  const accuChanged = (prevAccu, nextAccu) => 
+    !prevAccu || !nextAccu || prevAccu.length !== nextAccu.length || prevAccu.some(
+      (val, idx) => val !== nextAccu[idx]
+    );
+  const oldHook = (wipFiber.alternate && wipFiber.alternate.hooks)
+    && wipFiber.alternate.hooks[hookIndex]; // returns the  work in progress fiber alternate hooks
+  const hooksChanged = accuChanged(oldHook? oldHook.accumulator : undefined, accumulator);
+  const newHook = {
+    tag: 'effect',
+    callback: hooksChanged ? callback : null,
+    cancelCallback: (hooksChanged && oldHook) && oldHook.cancelCallback,
+    accumulator
+  }
+  wipFiber.hooks.push(newHook);
+  hookIndex++;
+}
+
 const updateHostComponent = (fiber) => {
   (!fiber.dom) && (fiber.dom = createDOM(fiber));
   const elements = fiber.props.children.flat();
-  console.log('ELEM: ', elements)
-  reconcileChildren(fiber, elements);
+  //run diff if component updates
+  diff(fiber, elements);
 };
 
-const reconcileChildren = (wipFiber, elements) => {
+//Diffing algorithm
+const diff = (wipFiber, elements) => {
   let index = 0;
   let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
   let prevSibling = null;
@@ -214,6 +265,7 @@ const reconcileChildren = (wipFiber, elements) => {
       effectTag: effectTag
     }
   }
+  //Assign a tag per node (CREATEe, UPDATE, DESTOY)
   while (index < elements.length || oldFiber != null) {
     const element = elements[index];
     let newFiber = null;
@@ -230,7 +282,6 @@ const reconcileChildren = (wipFiber, elements) => {
       oldFiber.effectTag = "DESTROY";
       deletes.push(oldFiber);
     }
-    console.log('OLD: ', oldFiber, typeof(oldFiber));
     (oldFiber) && (oldFiber = oldFiber.sibling);
     if (index === 0) {
       wipFiber.child = newFiber;
@@ -242,7 +293,6 @@ const reconcileChildren = (wipFiber, elements) => {
   }
 };
 
-const Rast = { DOMnode, renderDOM, initializeValue }
-export  { DOMnode, renderDOM, initializeValue };
+const Rast = { DOMnode, renderDOM, initializeValue, initializeEffect }
+export  { DOMnode, renderDOM, initializeValue, initializeEffect };
 export default Rast
-/** @jsx DOMnode */
