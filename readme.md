@@ -128,9 +128,20 @@ Use camel-casing, **do not use (background-color)** when declaring a style, rast
 </div>
 ```
 
+### Event Listeners
+When adding an event listener on a certain element, use *event + event-name*  (example: eventClick).<br />
+Here is the link of available DOM element events: <br/>
+https://www.w3schools.com/jsref/dom_obj_event.asp
+
+``` jsx
+<button eventClick={your_function} >Add</button>
+<input eventInput={(e) => myState.setValue(e.target.value)} />
+<form eventSubmit={handleSubmit}></form>
+```
+
 ### Importing images
 use: 
-``` js
+``` jsx
 //Assuming that the image is on the assets folder
 import yourImage from '../assets/your-image.png';
 <img src={yourImage} />
