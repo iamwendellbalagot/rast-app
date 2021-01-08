@@ -5,33 +5,36 @@ var deletes = null;
 var wipFiber = null;
 var hookIndex = null;
 var effectTypes = {
-  init: 'initialize',
-  cancel: 'cancel'
+  init: "initialize",
+  cancel: "cancel",
 };
 
 //create virtual dom nodes
 const DOMnode = (type, props, ...children) => {
   return {
-  type,
-  props: {
-    ...props,
-    children: children.map((child) =>
-      typeof child !== "object" ? {
-        type: "plainText",
-        props: { nodeValue: child, children: [] }
-      } : child
-    )
-  }
-}};
+    type,
+    props: {
+      ...props,
+      children: children.map((child) =>
+        typeof child !== "object"
+          ? {
+              type: "plainText",
+              props: { nodeValue: child, children: [] },
+            }
+          : child
+      ),
+    },
+  };
+};
 
 //assign the root element as nextworkload
 const renderDOM = (element, container) => {
   wipRoot = {
     dom: container,
     props: {
-      children: [element]
+      children: [element],
     },
-    alternate: rootRef
+    alternate: rootRef,
   };
   deletes = [];
   nextWorkLoad = wipRoot;
@@ -74,13 +77,16 @@ const updateDOM = (dom, prevProps, nextProps) => {
     .filter(isProp)
     .filter(newProps(prevProps, nextProps))
     .forEach((prop) => {
-      if (prop === 'style') { // update if prop style
-        transformDomStyle(dom, nextProps.style)
-      } else if (prop === 'className') { // update if prop className
-        prevProps.className && dom.classList.remove(...prevProps.className.split(/\s+/))
-        dom.classList.add(...nextProps.className.split(/\s+/))
+      if (prop === "style") {
+        // update if prop style
+        transformDomStyle(dom, nextProps.style);
+      } else if (prop === "className") {
+        // update if prop className
+        prevProps.className &&
+          dom.classList.remove(...prevProps.className.split(/\s+/));
+        dom.classList.add(...nextProps.className.split(/\s+/));
       } else {
-        dom[prop] = nextProps[prop] //append props if not default html element prop
+        dom[prop] = nextProps[prop]; //append props if not default html element prop
       }
     });
   //addevent
@@ -93,30 +99,32 @@ const updateDOM = (dom, prevProps, nextProps) => {
     });
 };
 // Transform styles
-const reg = /[A-Z]/g
+const reg = /[A-Z]/g;
 function transformDomStyle(dom, style) {
-  dom.style = Object.keys(style)
-    .reduce((acc, styleName) => {
-      const key = styleName.replace(
-        reg, 
-        function(v) { 
-          return '-' + v.toLowerCase() 
-        }
-      )
-      acc += `${key}: ${style[styleName]};`
-      return acc
-    }, '')
+  dom.style = Object.keys(style).reduce((acc, styleName) => {
+    const key = styleName.replace(reg, function (v) {
+      return "-" + v.toLowerCase();
+    });
+    acc += `${key}: ${style[styleName]};`;
+    return acc;
+  }, "");
 }
 
 //runeffects
 const activateEffects = (fiber, type) => {
-  (fiber.hooks && type===effectTypes.cancel) && fiber.hooks.filter(hook => hook.tag === 'effect' && hook.cancelCallback)
-    .forEach(effect => effect.cancelCallback());
-  (fiber.hooks && type===effectTypes.init) && fiber.hooks.filter(hook => hook.tag === 'effect' && hook.callback)
-    .forEach(effect => {
-      effect.cancelCallback = effect.callback();
-    })
-}
+  fiber.hooks &&
+    type === effectTypes.cancel &&
+    fiber.hooks
+      .filter((hook) => hook.tag === "effect" && hook.cancelCallback)
+      .forEach((effect) => effect.cancelCallback());
+  fiber.hooks &&
+    type === effectTypes.init &&
+    fiber.hooks
+      .filter((hook) => hook.tag === "effect" && hook.callback)
+      .forEach((effect) => {
+        effect.cancelCallback = effect.callback();
+      });
+};
 
 //commit vdom nodes to the dom
 const commitRoot = () => {
@@ -133,20 +141,19 @@ const commitWork = (fiber) => {
     domParentFiber = domParentFiber.parent;
   }
   const domParent = domParentFiber.dom;
-  (fiber.effectTag === "CREATE") && (
-    (fiber.dom != null) && domParent.appendChild(fiber.dom),
-    activateEffects(fiber, effectTypes.init)
-  );
-  (fiber.effectTag === "UPDATE")&& (
-    activateEffects(fiber, effectTypes.cancel),
-    (fiber.dom != null) && updateDOM(fiber.dom, fiber.alternate.props, fiber.props),
-    activateEffects(fiber, effectTypes.init)
-  );
-  if(fiber.effectTag === "DESTROY") {
+  fiber.effectTag === "CREATE" &&
+    (fiber.dom != null && domParent.appendChild(fiber.dom),
+    activateEffects(fiber, effectTypes.init));
+  fiber.effectTag === "UPDATE" &&
+    (activateEffects(fiber, effectTypes.cancel),
+    fiber.dom != null &&
+      updateDOM(fiber.dom, fiber.alternate.props, fiber.props),
+    activateEffects(fiber, effectTypes.init));
+  if (fiber.effectTag === "DESTROY") {
     activateEffects(fiber, effectTypes.cancel);
-    commitDelete(fiber, domParent); 
+    commitDelete(fiber, domParent);
     return;
-  };
+  }
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 };
@@ -163,7 +170,7 @@ const workLoadLoop = (deadline) => {
     nextWorkLoad = performWorkLoad(nextWorkLoad);
     yieldStatus = deadline.timeRemaining() < 1;
   }
-  (!nextWorkLoad && wipRoot) && commitRoot();
+  !nextWorkLoad && wipRoot && commitRoot();
   requestIdleCallback(workLoadLoop);
 };
 
@@ -171,8 +178,8 @@ requestIdleCallback(workLoadLoop);
 //Process the assigned workload
 const performWorkLoad = (fiber) => {
   const isFuncComponent = fiber.type instanceof Function;
-  (isFuncComponent) && updateFuncComponent(fiber);
-  (!isFuncComponent) && updateHostComponent(fiber);
+  isFuncComponent && updateFuncComponent(fiber);
+  !isFuncComponent && updateHostComponent(fiber);
   if (fiber.child) return fiber.child;
   let nextFiber = fiber;
   while (nextFiber) {
@@ -197,7 +204,7 @@ const initializeValue = (initialState) => {
     wipFiber.alternate.hooks[hookIndex];
   const hook = {
     state: oldHook ? oldHook.state : initialState,
-    queue: []
+    queue: [],
   };
   //process actions
   const actions = oldHook ? oldHook.queue : [];
@@ -210,7 +217,7 @@ const initializeValue = (initialState) => {
     wipRoot = {
       dom: rootRef.dom,
       props: rootRef.props,
-      alternate: rootRef
+      alternate: rootRef,
     };
     nextWorkLoad = wipRoot;
     deletes = [];
@@ -220,30 +227,36 @@ const initializeValue = (initialState) => {
   hookIndex++;
   return {
     value: hook.state,
-    setValue: setValue
+    setValue: setValue,
   };
 };
 
 const initializeEffect = (accumulator, callback) => {
-  const accuChanged = (prevAccu, nextAccu) => 
-    !prevAccu || !nextAccu || prevAccu.length !== nextAccu.length || prevAccu.some(
-      (val, idx) => val !== nextAccu[idx]
-    );
-  const oldHook = (wipFiber.alternate && wipFiber.alternate.hooks)
-    && wipFiber.alternate.hooks[hookIndex]; // returns the  work in progress fiber alternate hooks
-  const hooksChanged = accuChanged(oldHook? oldHook.accumulator : undefined, accumulator);
-  const newHook = {
-    tag: 'effect',
-    callback: hooksChanged ? callback : null,
-    cancelCallback: (hooksChanged && oldHook) && oldHook.cancelCallback,
+  const accuChanged = (prevAccu, nextAccu) =>
+    !prevAccu ||
+    !nextAccu ||
+    prevAccu.length !== nextAccu.length ||
+    prevAccu.some((val, idx) => val !== nextAccu[idx]);
+  const oldHook =
+    wipFiber.alternate &&
+    wipFiber.alternate.hooks &&
+    wipFiber.alternate.hooks[hookIndex]; // returns the  work in progress fiber alternate hooks
+  const hooksChanged = accuChanged(
+    oldHook ? oldHook.accumulator : undefined,
     accumulator
-  }
+  );
+  const newHook = {
+    tag: "effect",
+    callback: hooksChanged ? callback : null,
+    cancelCallback: hooksChanged && oldHook && oldHook.cancelCallback,
+    accumulator,
+  };
   wipFiber.hooks.push(newHook);
   hookIndex++;
-}
+};
 
 const updateHostComponent = (fiber) => {
-  (!fiber.dom) && (fiber.dom = createDOM(fiber));
+  !fiber.dom && (fiber.dom = createDOM(fiber));
   const elements = fiber.props.children.flat();
   //run diff if component updates
   diff(fiber, elements);
@@ -262,27 +275,38 @@ const diff = (wipFiber, elements) => {
       dom: dom,
       parent: parent,
       alternate: alternate,
-      effectTag: effectTag
-    }
-  }
+      effectTag: effectTag,
+    };
+  };
   //Assign a tag per node (CREATEe, UPDATE, DESTOY)
   while (index < elements.length || oldFiber != null) {
     const element = elements[index];
     let newFiber = null;
     const sameType = oldFiber && element && element.type == oldFiber.type;
-    sameType && (newFiber = createNewFiber(oldFiber.type,
-      element.props, 
-      oldFiber.dom,wipFiber, 
-      oldFiber, 'UPDATE'));
-    (!sameType && element) && (newFiber = createNewFiber(element.type,
-      element.props, 
-      null,wipFiber, 
-      null, 'CREATE'));
+    sameType &&
+      (newFiber = createNewFiber(
+        oldFiber.type,
+        element.props,
+        oldFiber.dom,
+        wipFiber,
+        oldFiber,
+        "UPDATE"
+      ));
+    !sameType &&
+      element &&
+      (newFiber = createNewFiber(
+        element.type,
+        element.props,
+        null,
+        wipFiber,
+        null,
+        "CREATE"
+      ));
     if (!sameType && oldFiber) {
       oldFiber.effectTag = "DESTROY";
       deletes.push(oldFiber);
     }
-    (oldFiber) && (oldFiber = oldFiber.sibling);
+    oldFiber && (oldFiber = oldFiber.sibling);
     if (index === 0) {
       wipFiber.child = newFiber;
     } else if (element && prevSibling) {
@@ -293,6 +317,6 @@ const diff = (wipFiber, elements) => {
   }
 };
 
-const Rast = { DOMnode, renderDOM, initializeValue, initializeEffect }
-export  { DOMnode, renderDOM, initializeValue, initializeEffect };
-export default Rast
+const Rast = { DOMnode, renderDOM, initializeValue, initializeEffect };
+export { DOMnode, renderDOM, initializeValue, initializeEffect };
+export default Rast;

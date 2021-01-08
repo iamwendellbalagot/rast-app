@@ -1,17 +1,82 @@
-$appBack: #30475e;
+$background: #30475e;
+$nav: #222831;
+$fontColor: #dddddd;
+$sub: #f05454;
 
 .app {
-  background-color: $appBack;
+  background-color: $background;
   height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   margin: 0;
+  color: $fontColor;
+  font-family: "Roboto", sans-serif;
 }
 
-.logs {
-  width: 400px;
-  border: 1px solid lightgreen;
-  text-align: center;
+.app__nav {
+  display: flex;
+  background-color: $nav;
+  height: 50px;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 20px;
+}
+
+.app__nav > img {
+  height: 40px;
+  object-fit: contain;
+}
+
+.app__nav > ul {
+  display: flex;
+}
+
+.app__nav > ul > li {
+  list-style: none;
+  padding-left: 30px;
+  width: 100px;
+}
+
+.app__nav > ul > li > a {
+  text-decoration: none;
+  color: $fontColor;
+  cursor: pointer;
+  transition: all 300ms;
+}
+
+.app__nav > ul > li > a:hover {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.app__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.app__body > h1 {
+  font-size: 150px;
+  color: #ccc;
+  text-decoration: underline;
+  margin: 0;
+  text-decoration-color: $sub;
+  -webkit-text-decoration-color: $sub;
+}
+
+.app__body > p {
+  font-size: 19px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $nav;
+  height: 50px;
 }
