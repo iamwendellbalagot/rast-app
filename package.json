@@ -25,6 +25,10 @@
     "webpack-dev-server": "^3.11.1"
   },
   "dependencies": {
+    "fs-extra": "^9.0.1",
     "rastjs": "^1.0.0"
+  },
+  "bin": {
+    "rast-app-test": "./bin/start.js"
   }
 }
