@@ -1,14 +1,14 @@
 import Rast from './rast'
 /** @jsx Rast.DOMnode */
-import Welcome from './src/app';
-const App = () => {
+import App from './src/app';
+const Root = () => {
     return (
-        <div style='margin:0'>
-            <Welcome />
+        <div>
+            <App />
         </div>
     )
 }
 
-const element = <App />;
+const element = <Root />;
 const container = document.getElementById("root");
 Rast.renderDOM(element, container);

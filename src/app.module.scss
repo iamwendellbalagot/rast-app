@@ -1,4 +1,4 @@
-$appBack: gray;
+$appBack: #30475e;
 
 .app {
   background-color: $appBack;
@@ -7,6 +7,7 @@ $appBack: gray;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin: 0;
 }
 
 .logs {

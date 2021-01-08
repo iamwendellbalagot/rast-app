@@ -205,7 +205,7 @@ const initializeValue = (initialState) => {
     hook.state = action;
   });
   //return function to modify state
-  const setState = (action) => {
+  const setValue = (action) => {
     hook.queue.push(action);
     wipRoot = {
       dom: rootRef.dom,
@@ -220,7 +220,7 @@ const initializeValue = (initialState) => {
   hookIndex++;
   return {
     value: hook.state,
-    setValue: setState
+    setValue: setValue
   };
 };
 
