@@ -1,4 +1,4 @@
-import { initializeValue, DOMnode, initializeEffect } from "../rast";
+import { initializeValue, DOMnode, initializeEffect } from "rastjs";
 /** @jsx DOMnode */
 import logo from "../assets/logo.png";
 import styles from "./app.module.scss";

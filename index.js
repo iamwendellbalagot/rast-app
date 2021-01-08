@@ -1,4 +1,4 @@
-import Rast from "./rast";
+import Rast from "rastjs";
 /** @jsx Rast.DOMnode */
 import App from "./src/app";
 const Root = () => {
