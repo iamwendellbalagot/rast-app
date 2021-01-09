@@ -50,6 +50,14 @@ export default App;
 
 ```
   * **Note**: you need to add *//** @jsx DOMnode*/ to every .js files that uses JSX to transpile it (see the example above).
+### Known Issue
+When you use ternary operators or (map/forEach) to render JSX elements, you need to put a div element as a wrapper.
+``` jsx
+//Example 1
+<div>{myState.value? <p>Hello, World</p> : null}</div>
+//Example 2
+<div>{mystate.value.map(item => (<p>{item}</p>))}</div>
+```
 ### initializeValue Hook
 Like react, you can also declare a state in your application using RastJS.
 
