@@ -6,10 +6,8 @@ const { exec } = require("child_process");
 
 const packageJson = require("../package.json");
 
-const scripts = `"start": "webpack-dev-server --mode=development --open --hot",
+const scripts = `"start": "webpack serve --output-public-path=/build/ --mode=development --open --hot",
 "build": "webpack --mode=production"`;
-
-const babel = `"babel": ${JSON.stringify(packageJson.babel)}`;
 
 const getDeps = (deps) =>
   Object.entries(deps)
@@ -21,6 +19,7 @@ const getDeps = (deps) =>
     .replace(/fs-extra[^\s]+/g, "");
 
 console.log("Initializing RastJS project..");
+console.log("deps to install: ", getDeps(packageJson.devDependencies));
 
 // create folder and initialize npm
 exec(
@@ -40,12 +39,16 @@ exec(
         .replace(
           '"test": "echo \\"Error: no test specified\\" && exit 1"',
           scripts
-        )
-        .replace('"keywords": []', babel);
+        );
       fs.writeFile(packageJSON, data, (err2) => err2 || true);
     });
 
-    const filesToCopy = ["webpack.config.js"];
+    const filesToCopy = [
+      "webpack.config.js",
+      ".babelrc.js",
+      "index.html",
+      "index.js",
+    ];
 
     for (let i = 0; i < filesToCopy.length; i += 1) {
       fs.createReadStream(path.join(__dirname, `../${filesToCopy[i]}`)).pipe(
@@ -55,7 +58,7 @@ exec(
 
     // npm will remove the .gitignore file when the package is installed, therefore it cannot be copied, locally and needs to be downloaded. Use your raw .gitignore once you pushed your code to GitHub.
     https.get(
-      "https://raw.githubusercontent.com/Nikhil-Kumaran/reactjs-boilerplate/master/.gitignore",
+      "https://raw.githubusercontent.com/iamwendellbalagot/rast-app/master/.gitignore",
       (res) => {
         res.setEncoding("utf8");
         let body = "";
@@ -78,7 +81,7 @@ exec(
     console.log("npm init -- done\n");
 
     // installing dependencies
-    console.log("Installing deps -- it might take a few minutes..");
+    console.log("Installing dependencies -- it might take a few minutes..");
     const devDeps = getDeps(packageJson.devDependencies);
     const deps = getDeps(packageJson.dependencies);
     exec(
@@ -95,6 +98,9 @@ exec(
         console.log("Copying additional files..");
         // copy additional source files
         fs.copy(path.join(__dirname, "../src"), `${process.argv[2]}/src`)
+          .then(() => console.log(`One more step....`))
+          .catch((err) => console.error(err));
+        fs.copy(path.join(__dirname, "../assets"), `${process.argv[2]}/assets`)
           .then(() =>
             console.log(
               `All done!\n\nYour project is now ready\n\nUse the below command to run the app.\n\ncd ${process.argv[2]}\nnpm start`

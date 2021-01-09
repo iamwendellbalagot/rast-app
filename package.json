@@ -1,5 +1,5 @@
 {
-  "name": "rast-app",
+  "name": "rastjs-app",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -29,6 +29,6 @@
     "rastjs": "^1.0.0"
   },
   "bin": {
-    "rast-app-test": "./bin/start.js"
+    "rastjs-app": "./bin/start.js"
   }
 }
