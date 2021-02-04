@@ -63,16 +63,19 @@ Like react, you can also declare a state in your application using RastJS.
 
 ``` js
 //State Implementation
-import {DOMnode, initializeValue} from 'rastjs';
+import {DOMnode, initializeValue, initializeEffect} from 'rastjs';
 /** @jsx DOMnode */
 const App = () => {
   const myState = initializeValue('value'); // Initialize a state
   
+  initializeEffect([myState.value], () => {
+    //You can get the value of a certain state by using:
+    console.log(myState.value);
+  });
+  
   const handleState = () => {
     //Change the state value
     myInput.setValue('new value');
-    //You can get the value of a certain state by using:
-    console.log(myState.value);
   }
   
   return;
